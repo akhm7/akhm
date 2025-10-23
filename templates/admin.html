@@ -4,68 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Garmin Stats</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>⚙️ Admin Panel</h1>
-            <a href="/" class="nav-link" style="position: absolute; top: 0; right: 0;">← Back to Stats</a>
-        </header>
+<body class="bg-light">
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Admin Panel</h1>
+            <a href="/" class="btn btn-outline-secondary">← Back to Stats</a>
+        </div>
 
-        <main>
-            <div id="message-container"></div>
+        <div id="message-container"></div>
 
-            <!-- Добавить вес -->
-            <div class="admin-section">
-                <h2>⚖️ Add Weight</h2>
-                <form id="weight-form">
-                    <div class="form-group">
-                        <label for="weight">Weight (kg)</label>
-                        <input type="number" id="weight" step="0.1" required>
+        <div class="row g-4">
+            <!-- Add Weight -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">⚖️ Add Weight</h5>
+                        <form id="weight-form">
+                            <div class="mb-3">
+                                <label for="weight" class="form-label">Weight (kg)</label>
+                                <input type="number" class="form-control" id="weight" step="0.1" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="weight-date" class="form-label">Date (optional)</label>
+                                <input type="date" class="form-control" id="weight-date">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Weight</button>
+                        </form>
                     </div>
-                    <div class="form-group">
-                        <label for="weight-date">Date (optional, defaults to today)</label>
-                        <input type="date" id="weight-date">
-                    </div>
-                    <button type="submit" class="btn">Add Weight</button>
-                </form>
+                </div>
             </div>
 
-            <!-- Добавить калории -->
-            <div class="admin-section">
-                <h2>🍕 Add Food Calories</h2>
-                <form id="calories-form">
-                    <div class="form-group">
-                        <label for="calories">Calories</label>
-                        <input type="number" id="calories" required>
+            <!-- Add Calories -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">🍕 Add Food Calories</h5>
+                        <form id="calories-form">
+                            <div class="mb-3">
+                                <label for="calories" class="form-label">Calories</label>
+                                <input type="number" class="form-control" id="calories" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="calories-datetime" class="form-label">Date & Time</label>
+                                <input type="datetime-local" class="form-control" id="calories-datetime" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Calories</button>
+                        </form>
                     </div>
-                    <div class="form-group">
-                        <label for="calories-datetime">Date & Time</label>
-                        <input type="datetime-local" id="calories-datetime" required>
-                    </div>
-                    <button type="submit" class="btn">Add Calories</button>
-                </form>
+                </div>
             </div>
 
-            <!-- Обновить данные -->
-            <div class="admin-section">
-                <h2>🔄 Update Garmin Data</h2>
-                <p>Fetch latest data from Garmin Connect (updates today's data)</p>
-                <button id="update-btn" class="btn">Update Data</button>
+            <!-- Update Data -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">🔄 Update Garmin Data</h5>
+                        <p class="card-text text-muted">Fetch latest data from Garmin Connect</p>
+                        <button id="update-btn" class="btn btn-success">Update Data</button>
+                    </div>
+                </div>
             </div>
 
-            <!-- Управление данными -->
-            <div class="admin-section">
-                <h2>💾 Data Management</h2>
-                <button id="export-btn" class="btn btn-secondary">Export Data (JSON)</button>
-                <button id="import-btn" class="btn btn-secondary">Import Data</button>
-                <input type="file" id="import-file" accept=".json" style="display: none;">
-                <button id="clear-btn" class="btn btn-danger">Clear All Data</button>
+            <!-- Data Management -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">💾 Data Management</h5>
+                        <div class="btn-group" role="group">
+                            <button id="export-btn" class="btn btn-outline-secondary">Export Data</button>
+                            <button id="import-btn" class="btn btn-outline-secondary">Import Data</button>
+                            <button id="clear-btn" class="btn btn-outline-danger">Clear All Data</button>
+                        </div>
+                        <input type="file" id="import-file" accept=".json" style="display: none;">
+                    </div>
+                </div>
             </div>
-        </main>
+        </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/admin.js"></script>
 </body>
 </html>

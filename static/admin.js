@@ -1,9 +1,13 @@
 const messageContainer = document.getElementById('message-container');
 
 function showMessage(text, type = 'success') {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
     const msg = document.createElement('div');
-    msg.className = `message ${type}`;
-    msg.textContent = text;
+    msg.className = `alert ${alertClass} alert-dismissible fade show`;
+    msg.innerHTML = `
+        ${text}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
     messageContainer.appendChild(msg);
     
     setTimeout(() => {

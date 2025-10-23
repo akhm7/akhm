@@ -4,145 +4,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ profile.name }} - Stats</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body { background: #f8f9fa; }
+        .stat-card { background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .chart-container { background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); min-height: 300px; }
+        .nav-tabs .nav-link { color: #495057; }
+        .nav-tabs .nav-link.active { color: #0d6efd; font-weight: 500; }
+        h1 { font-size: 1.75rem; font-weight: 600; }
+        .stat-value { font-size: 2rem; font-weight: 600; color: #0d6efd; }
+        .stat-label { font-size: 0.875rem; color: #6c757d; text-transform: uppercase; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>{{ profile.name }}</h1>
-            <p class="role">💼 {{ profile.role }}</p>
-            <p class="contact">📱 {{ profile.telegram }}</p>
-            <p class="hobbies">🏀 {{ profile.hobbies }}</p>
-            <a href="/admin" class="nav-link" style="position: absolute; top: 0; right: 0;">⚙️ Admin</a>
-        </header>
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1">{{ profile.name }}</h1>
+                <p class="text-muted mb-0">{{ profile.role }}</p>
+            </div>
+            <a href="/admin" class="btn btn-outline-primary">Admin</a>
+        </div>
 
         {% if data %}
-        <main>
-            <!-- Переключатель периодов -->
-            <div class="period-toggle">
-                <button class="period-btn active" data-period="month">📅 Month</button>
-                <button class="period-btn" data-period="year">📊 Year</button>
+        <!-- Period Tabs -->
+        <ul class="nav nav-tabs mb-4" id="periodTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="month-tab" data-bs-toggle="tab" data-bs-target="#month" type="button">📅 Month</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="year-tab" data-bs-toggle="tab" data-bs-target="#year" type="button">📊 Year</button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="periodTabsContent">
+            <!-- Month Stats -->
+            <div class="tab-pane fade show active" id="month" role="tabpanel">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-6">
+                        <div class="stat-card text-center">
+                            <div class="stat-value">{{ "{:,}".format(data.averages.month.steps) }}</div>
+                            <div class="stat-label">Avg Steps/Day</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="stat-card text-center">
+                            <div class="stat-value">{{ data.averages.month.distance_km if data.averages.month.distance_km else '0.0' }}</div>
+                            <div class="stat-label">Avg km/Day</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="stat-card text-center">
+                            <div class="stat-value">{{ data.averages.month.calories }}</div>
+                            <div class="stat-label">Avg kcal/Day</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="stat-card text-center">
+                            <div class="stat-value">{{ data.averages.month.sleep_minutes // 60 }}h {{ data.averages.month.sleep_minutes % 60 }}m</div>
+                            <div class="stat-label">Avg Sleep</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Статистика за месяц -->
-            <section class="stats-grid" data-period="month">
-                <div class="stat-card">
-                    <div class="stat-icon">👟</div>
-                    <div class="stat-value">{{ "{:,}".format(data.averages.month.steps) }}</div>
-                    <div class="stat-label">avg steps/day</div>
+            <!-- Year Stats -->
+            <div class="tab-pane fade" id="year" role="tabpanel">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-6">
+                        <div class="stat-card text-center">
+                            <div class="stat-value">{{ "{:,}".format(data.averages.year.steps) }}</div>
+                            <div class="stat-label">Avg Steps/Day</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="stat-card text-center">
+                            <div class="stat-value">{{ data.averages.year.distance_km }}</div>
+                            <div class="stat-label">Avg km/Day</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="stat-card text-center">
+                            <div class="stat-value">{{ "{:,}".format(data.averages.year.total_steps) }}</div>
+                            <div class="stat-label">Total Steps</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="stat-card text-center">
+                            <div class="stat-value">{{ data.averages.year.days_with_data }}</div>
+                            <div class="stat-label">Days Tracked</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon">🏃</div>
-                    <div class="stat-value">{{ data.averages.month.distance_km }}</div>
-                    <div class="stat-label">avg km/day</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">🔥</div>
-                    <div class="stat-value">{{ data.averages.month.calories }}</div>
-                    <div class="stat-label">avg kcal/day</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">😴</div>
-                    <div class="stat-value">{{ data.averages.month.sleep_minutes // 60 }}h {{ data.averages.month.sleep_minutes % 60 }}m</div>
-                    <div class="stat-label">avg sleep</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">📈</div>
-                    <div class="stat-value">{{ data.averages.month.days_with_data }}</div>
-                    <div class="stat-label">days tracked</div>
-                </div>
-                {% if data.averages.weight.current %}
-                <div class="stat-card">
-                    <div class="stat-icon">⚖️</div>
-                    <div class="stat-value">{{ data.averages.weight.current }} kg</div>
-                    <div class="stat-label">current weight</div>
-                </div>
-                {% endif %}
-            </section>
-
-            <!-- Статистика за год -->
-            <section class="stats-grid hidden" data-period="year">
-                <div class="stat-card">
-                    <div class="stat-icon">👟</div>
-                    <div class="stat-value">{{ "{:,}".format(data.averages.year.steps) }}</div>
-                    <div class="stat-label">avg steps/day</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">🏃</div>
-                    <div class="stat-value">{{ data.averages.year.distance_km }}</div>
-                    <div class="stat-label">avg km/day</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">😴</div>
-                    <div class="stat-value">{{ data.averages.year.sleep_minutes // 60 }}h {{ data.averages.year.sleep_minutes % 60 }}m</div>
-                    <div class="stat-label">avg sleep</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">🎯</div>
-                    <div class="stat-value">{{ "{:,}".format(data.averages.year.total_steps) }}</div>
-                    <div class="stat-label">total steps</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">📅</div>
-                    <div class="stat-value">{{ data.averages.year.days_with_data }}</div>
-                    <div class="stat-label">days tracked</div>
-                </div>
-                {% if data.averages.weight.average %}
-                <div class="stat-card">
-                    <div class="stat-icon">⚖️</div>
-                    <div class="stat-value">{{ data.averages.weight.average }} kg</div>
-                    <div class="stat-label">avg weight</div>
-                </div>
-                {% endif %}
-            </section>
-
-            <div class="activity-sleep-row">
-                <section class="activity">
-                    <h2>🔥 Activity Heatmap</h2>
-                    <p class="section-subtitle">Last 30 days</p>
-                    <div id="heatmap"></div>
-                </section>
-
-                <section class="sleep-chart">
-                    <h2>😴 Sleep Pattern</h2>
-                    <p class="section-subtitle">Average over last month</p>
-                    <div id="sleep-bars"></div>
-                </section>
             </div>
+        </div>
 
-            <section class="charts-row">
+        <!-- Charts -->
+        <div class="row g-3">
+            <div class="col-lg-6">
                 <div class="chart-container">
-                    <h2>👟 Steps Trend</h2>
-                    <p class="section-subtitle">Last 30 days</p>
+                    <h5 class="mb-3">Steps Trend (30 days)</h5>
                     <canvas id="steps-chart"></canvas>
                 </div>
+            </div>
+            <div class="col-lg-6">
                 <div class="chart-container">
-                    <h2>⚖️ Weight Progress</h2>
-                    <p class="section-subtitle">Last 90 days</p>
+                    <h5 class="mb-3">Calories (30 days)</h5>
+                    <canvas id="calories-chart"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5 class="mb-3">Sleep Duration (30 days)</h5>
+                    <canvas id="sleep-chart"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6" id="weight-container">
+                <div class="chart-container">
+                    <h5 class="mb-3">Weight Progress (90 days)</h5>
                     <canvas id="weight-chart"></canvas>
                 </div>
-            </section>
+            </div>
+        </div>
 
-            <section class="charts-row">
-                <div class="chart-container">
-                    <h2>🍕 Food Calories</h2>
-                    <p class="section-subtitle">Last 14 days</p>
-                    <canvas id="food-chart"></canvas>
-                </div>
-            </section>
-        </main>
-
-        <footer>
-            <p>⏱ Last update: {{ data.last_update[:10] if data.last_update else 'N/A' }}</p>
-        </footer>
+        <div class="text-center text-muted mt-4 small">
+            Last update: {{ data.last_update[:10] if data.last_update else 'N/A' }}
+        </div>
         {% else %}
-        <main>
-            <p class="no-data">{{ message or "Loading data..." }}</p>
-        </main>
+        <div class="alert alert-info text-center">
+            {{ message or "Loading data..." }}
+        </div>
         {% endif %}
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const data = {{ data | tojson | safe if data else 'null' }};
     </script>
