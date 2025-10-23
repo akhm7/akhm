@@ -67,6 +67,14 @@
                             <div class="stat-label">Avg Sleep</div>
                         </div>
                     </div>
+                    {% if data.averages.month.water_ml > 0 %}
+                    <div class="col-md-3 col-6">
+                        <div class="stat-card text-center">
+                            <div class="stat-value">{{ (data.averages.month.water_ml / 1000) | round(1) }}L</div>
+                            <div class="stat-label">Avg Water/Day</div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -105,25 +113,31 @@
         <div class="row g-3">
             <div class="col-lg-6">
                 <div class="chart-container">
-                    <h5 class="mb-3">Steps Trend (30 days)</h5>
+                    <h5 class="mb-3">📊 Steps Trend (30 days)</h5>
                     <canvas id="steps-chart"></canvas>
                 </div>
             </div>
             <div class="col-lg-6">
                 <div class="chart-container">
-                    <h5 class="mb-3">Calories (30 days)</h5>
+                    <h5 class="mb-3">🔥 Calories (30 days)</h5>
                     <canvas id="calories-chart"></canvas>
                 </div>
             </div>
             <div class="col-lg-6">
                 <div class="chart-container">
-                    <h5 class="mb-3">Sleep Duration (30 days)</h5>
+                    <h5 class="mb-3">😴 Sleep Duration (30 days)</h5>
                     <canvas id="sleep-chart"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6" id="water-container">
+                <div class="chart-container">
+                    <h5 class="mb-3">💧 Water Intake (30 days)</h5>
+                    <canvas id="water-chart"></canvas>
                 </div>
             </div>
             <div class="col-lg-6" id="weight-container">
                 <div class="chart-container">
-                    <h5 class="mb-3">Weight Progress (90 days)</h5>
+                    <h5 class="mb-3">⚖️ Weight Progress (90 days)</h5>
                     <canvas id="weight-chart"></canvas>
                 </div>
             </div>

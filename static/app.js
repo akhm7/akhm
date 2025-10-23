@@ -5,6 +5,7 @@ if (!data) {
     renderCaloriesChart();
     renderSleepChart();
     renderWeightChart();
+    renderWaterChart();
 }
 
 function getLast30Days() {
@@ -38,30 +39,40 @@ function renderStepsChart() {
     });
     
     new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
             labels: last30Days.map(d => new Date(d).getDate()),
             datasets: [{
                 label: 'Steps',
                 data: stepsData,
+                backgroundColor: 'rgba(13, 110, 253, 0.7)',
                 borderColor: '#0d6efd',
-                backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointRadius: 3,
-                pointHoverRadius: 5
+                borderWidth: 1,
+                borderRadius: 4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: true,
             plugins: {
-                legend: { display: false }
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toLocaleString() + ' steps';
+                        }
+                    }
+                }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: { color: '#6c757d' },
+                    ticks: { 
+                        color: '#6c757d',
+                        callback: function(value) {
+                            return value >= 1000 ? (value/1000) + 'k' : value;
+                        }
+                    },
                     grid: { color: 'rgba(0,0,0,0.05)' }
                 },
                 x: {
@@ -97,25 +108,31 @@ function renderCaloriesChart() {
     const datasets = [{
         label: 'Burned',
         data: burnedData,
+        backgroundColor: 'rgba(220, 53, 69, 0.7)',
         borderColor: '#dc3545',
-        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-        tension: 0.4,
-        fill: true
+        borderWidth: 2,
+        type: 'bar',
+        order: 2
     }];
     
     if (hasConsumedData) {
         datasets.push({
             label: 'Consumed',
             data: consumedData,
+            backgroundColor: 'rgba(25, 135, 84, 0.2)',
             borderColor: '#198754',
-            backgroundColor: 'rgba(25, 135, 84, 0.1)',
-            tension: 0.4,
-            fill: true
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            type: 'line',
+            order: 1,
+            pointRadius: 3,
+            pointHoverRadius: 5
         });
     }
     
     new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
             labels: last30Days.map(d => new Date(d).getDate()),
             datasets: datasets
@@ -127,13 +144,25 @@ function renderCaloriesChart() {
                 legend: { 
                     display: hasConsumedData,
                     position: 'top',
-                    labels: { color: '#6c757d', usePointStyle: true }
+                    labels: { color: '#6c757d', usePointStyle: true, padding: 15 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.y.toLocaleString() + ' kcal';
+                        }
+                    }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: { color: '#6c757d' },
+                    ticks: { 
+                        color: '#6c757d',
+                        callback: function(value) {
+                            return value >= 1000 ? (value/1000) + 'k' : value;
+                        }
+                    },
                     grid: { color: 'rgba(0,0,0,0.05)' }
                 },
                 x: {
@@ -208,7 +237,7 @@ function renderSleepChart() {
             plugins: {
                 legend: { 
                     position: 'top',
-                    labels: { color: '#6c757d', usePointStyle: true, boxWidth: 12 }
+                    labels: { color: '#6c757d', usePointStyle: true, boxWidth: 12, padding: 10 }
                 },
                 tooltip: {
                     callbacks: {
@@ -273,18 +302,32 @@ function renderWeightChart() {
                 tension: 0.3,
                 fill: true,
                 pointRadius: 4,
-                pointHoverRadius: 6
+                pointHoverRadius: 6,
+                pointBackgroundColor: '#198754',
+                borderWidth: 2
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: true,
             plugins: {
-                legend: { display: false }
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toFixed(1) + ' kg';
+                        }
+                    }
+                }
             },
             scales: {
                 y: {
-                    ticks: { color: '#6c757d' },
+                    ticks: { 
+                        color: '#6c757d',
+                        callback: function(value) {
+                            return value.toFixed(1) + ' kg';
+                        }
+                    },
                     grid: { color: 'rgba(0,0,0,0.05)' }
                 },
                 x: {
@@ -293,6 +336,101 @@ function renderWeightChart() {
                         maxRotation: 45,
                         minRotation: 45
                     },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
+function renderWaterChart() {
+    const ctx = document.getElementById('water-chart');
+    if (!ctx) return;
+    
+    const last30Days = getLast30Days();
+    
+    const waterEntries = last30Days
+        .map(date => {
+            const day = data.daily_data[date];
+            return { date, water: day?.water_ml || null };
+        })
+        .filter(entry => entry.water !== null);
+    
+    if (waterEntries.length === 0) {
+        document.getElementById('water-container').style.display = 'none';
+        return;
+    }
+    
+    // Целевое значение - 2000ml (2 литра в день)
+    const targetWater = 2000;
+    
+    const waterData = last30Days.map(date => {
+        const day = data.daily_data[date];
+        return day?.water_ml || 0;
+    });
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: last30Days.map(d => new Date(d).getDate()),
+            datasets: [
+                {
+                    label: 'Water Intake',
+                    data: waterData,
+                    backgroundColor: waterData.map(val => 
+                        val >= targetWater ? 'rgba(13, 202, 240, 0.7)' : 'rgba(13, 202, 240, 0.4)'
+                    ),
+                    borderColor: '#0dcaf0',
+                    borderWidth: 1,
+                    borderRadius: 4
+                },
+                {
+                    label: 'Target (2L)',
+                    data: new Array(last30Days.length).fill(targetWater),
+                    type: 'line',
+                    borderColor: '#fd7e14',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    pointRadius: 0,
+                    pointHoverRadius: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { 
+                    display: true,
+                    position: 'top',
+                    labels: { color: '#6c757d', usePointStyle: true, padding: 10 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            if (context.dataset.label === 'Target (2L)') {
+                                return 'Target: 2000 ml';
+                            }
+                            const liters = (context.parsed.y / 1000).toFixed(2);
+                            return context.parsed.y + ' ml (' + liters + 'L)';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { 
+                        color: '#6c757d',
+                        callback: function(value) {
+                            return (value / 1000).toFixed(1) + 'L';
+                        }
+                    },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                },
+                x: {
+                    ticks: { color: '#6c757d' },
                     grid: { display: false }
                 }
             }

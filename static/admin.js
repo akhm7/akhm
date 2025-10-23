@@ -64,6 +64,37 @@ document.getElementById('calories-form').addEventListener('submit', async (e) =>
         if (response.ok) {
             showMessage(`${calories} calories added`, 'success');
             document.getElementById('calories-form').reset();
+            // Восстанавливаем текущую дату/время
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('calories-datetime').value = now.toISOString().slice(0, 16);
+        } else {
+            showMessage(`Error: ${data.message}`, 'error');
+        }
+    } catch (err) {
+        showMessage(`Error: ${err.message}`, 'error');
+    }
+});
+
+// Добавить воду
+document.getElementById('water-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const water_ml = parseInt(document.getElementById('water').value);
+    const date = document.getElementById('water-date').value || null;
+    
+    try {
+        const response = await fetch('/api/water', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ water_ml, date })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage(`${water_ml} ml water added (total: ${data.water_ml} ml)`, 'success');
+            document.getElementById('water-form').reset();
         } else {
             showMessage(`Error: ${data.message}`, 'error');
         }

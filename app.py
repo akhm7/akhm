@@ -156,6 +156,52 @@ async def add_calories(
     except Exception as e:
         return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
 
+@app.post("/api/water")
+async def add_water(
+    water_ml: int = Body(..., embed=True),
+    date: Optional[str] = Body(None, embed=True)
+):
+    """Добавить выпитую воду за день"""
+    try:
+        date_str = date or datetime.today().strftime('%Y-%m-%d')
+        
+        # Получаем существующие данные
+        existing_data = r.get("garmin_data")
+        if not existing_data:
+            return JSONResponse({"error": "No data initialized. Run /update first"}, status_code=400)
+        
+        result = json.loads(existing_data)
+        daily_data = result.get("daily_data", {})
+        
+        # Инициализируем день если нет
+        if date_str not in daily_data:
+            daily_data[date_str] = {
+                "date": date_str,
+                "steps": None,
+                "calories": None,
+                "distance_km": None,
+                "sleep": {"total_minutes": None},
+                "water_ml": water_ml
+            }
+        else:
+            # Добавляем к существующему значению или устанавливаем новое
+            current_water = daily_data[date_str].get("water_ml", 0) or 0
+            daily_data[date_str]["water_ml"] = current_water + water_ml
+        
+        result["daily_data"] = daily_data
+        result["last_update"] = datetime.now().isoformat()
+        
+        # Сохраняем
+        r.set("garmin_data", json.dumps(result))
+        
+        return JSONResponse({
+            "status": "success",
+            "date": date_str,
+            "water_ml": daily_data[date_str]["water_ml"]
+        })
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+
 @app.get("/api/export")
 async def export_data():
     """Экспорт данных из Redis"""
@@ -235,6 +281,14 @@ async def update_data():
             sleep_data = client.get_sleep_data(today_str)
             day_data = process_day_data(today_str, stats, sleep_data)
             if day_data:
+                # Сохраняем пользовательские данные если они были
+                if today_str in daily_data:
+                    if "weight" in daily_data[today_str]:
+                        day_data["weight"] = daily_data[today_str]["weight"]
+                    if "food_log" in daily_data[today_str]:
+                        day_data["food_log"] = daily_data[today_str]["food_log"]
+                    if "water_ml" in daily_data[today_str]:
+                        day_data["water_ml"] = daily_data[today_str]["water_ml"]
                 daily_data[today_str] = day_data
         except:
             pass
@@ -317,6 +371,7 @@ def calculate_averages(daily_data):
     all_distance = []
     all_sleep = []
     all_weight = []
+    all_water = []
     
     # За последний месяц
     month_ago = datetime.now() - timedelta(days=30)
@@ -324,6 +379,7 @@ def calculate_averages(daily_data):
     month_calories = []
     month_distance = []
     month_sleep = []
+    month_water = []
     
     for date_str, day in daily_data.items():
         day_date = datetime.strptime(date_str, '%Y-%m-%d')
@@ -350,6 +406,11 @@ def calculate_averages(daily_data):
         
         if day.get("weight"):
             all_weight.append(day["weight"])
+        
+        if day.get("water_ml"):
+            all_water.append(day["water_ml"])
+            if day_date >= month_ago:
+                month_water.append(day["water_ml"])
     
     return {
         "year": {
@@ -358,14 +419,16 @@ def calculate_averages(daily_data):
             "distance_km": round(sum(all_distance) / len(all_distance), 2) if all_distance else 0,
             "sleep_minutes": round(sum(all_sleep) / len(all_sleep)) if all_sleep else 0,
             "days_with_data": len(all_steps),
-            "total_steps": sum(all_steps) if all_steps else 0
+            "total_steps": sum(all_steps) if all_steps else 0,
+            "water_ml": round(sum(all_water) / len(all_water)) if all_water else 0
         },
         "month": {
             "steps": round(sum(month_steps) / len(month_steps)) if month_steps else 0,
             "calories": round(sum(month_calories) / len(month_calories)) if month_calories else 0,
             "distance_km": round(sum(month_distance) / len(month_distance), 2) if month_distance else 0,
             "sleep_minutes": round(sum(month_sleep) / len(month_sleep)) if month_sleep else 0,
-            "days_with_data": len(month_steps)
+            "days_with_data": len(month_steps),
+            "water_ml": round(sum(month_water) / len(month_water)) if month_water else 0
         },
         "weight": {
             "current": all_weight[-1] if all_weight else None,
