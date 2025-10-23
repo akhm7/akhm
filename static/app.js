@@ -1,17 +1,6 @@
-// Theme management
-const themeToggle = document.getElementById('theme-toggle');
+// Theme management (disabled, only light theme)
 const html = document.documentElement;
-
-// Load saved theme
-const savedTheme = localStorage.getItem('theme') || 'dark';
-html.setAttribute('data-theme', savedTheme);
-
-themeToggle.addEventListener('click', () => {
-    const current = html.getAttribute('data-theme');
-    const next = current === 'dark' ? 'light' : 'dark';
-    html.setAttribute('data-theme', next);
-    localStorage.setItem('theme', next);
-});
+html.setAttribute('data-theme', 'light');
 
 // Period toggle
 const periodBtns = document.querySelectorAll('.period-btn');
@@ -47,13 +36,12 @@ if (!data) {
 }
 
 function getChartColors() {
-    const isDark = html.getAttribute('data-theme') === 'dark';
     return {
-        text: isDark ? '#c9d1d9' : '#24292f',
-        grid: isDark ? '#30363d' : '#d0d7de',
-        accent: isDark ? '#58a6ff' : '#0969da',
-        green: isDark ? '#39d353' : '#30a14e',
-        red: isDark ? '#ff7b72' : '#cf222e'
+        text: '#24292f',
+        grid: '#d0d7de',
+        accent: '#0969da',
+        green: '#30a14e',
+        red: '#cf222e'
     };
 }
 

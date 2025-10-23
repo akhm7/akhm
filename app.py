@@ -43,6 +43,13 @@ async def index(request: Request):
         "data": parsed_data
     })
 
+@app.get("/admin", response_class=HTMLResponse)
+async def admin(request: Request):
+    """Admin страница"""
+    return templates.TemplateResponse("admin.html", {
+        "request": request
+    })
+
 @app.get("/api/data")
 async def get_data():
     """API endpoint для получения данных"""
@@ -98,12 +105,38 @@ async def add_weight(
 @app.post("/api/calories")
 async def add_calories(
     calories: int = Body(..., embed=True),
-    datetime_str: str = Body(..., embed=True)
+    datetime_str: str = Body(..., embed=True, alias="datetime")
 ):
     """Добавить съеденные калории с датой и временем"""
     try:
         # Парсим дату-время
-        dt = datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
+        dt = datetime.fromisoformat(datetime_str.replace('Z', '+00
+
+@app.get("/api/export")
+async def export_data():
+    """Экспорт данных из Redis"""
+    data = r.get("garmin_data")
+    if not data:
+        return JSONResponse({"error": "No data available"}, status_code=404)
+    return JSONResponse(json.loads(data))
+
+@app.post("/api/import")
+async def import_data(data: dict = Body(...)):
+    """Импорт данных в Redis"""
+    try:
+        r.set("garmin_data", json.dumps(data))
+        return JSONResponse({"status": "success", "message": "Data imported successfully"})
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+
+@app.post("/api/clear")
+async def clear_data():
+    """Очистить все данные из Redis"""
+    try:
+        r.delete("garmin_data")
+        return JSONResponse({"status": "success", "message": "All data cleared"})
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500):00'))
         date_str = dt.strftime('%Y-%m-%d')
         
         # Получаем существующие данные
