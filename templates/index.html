@@ -114,13 +114,13 @@
                     </div>
                     <div class="col-md-3 col-6">
                         <div class="stat-card text-center">
-                            <div class="stat-value">{{ data.averages.month.calories_burned }}</div>
+                            <div class="stat-value">{{ data.averages.month.calories_burned if data.averages.month.get('calories_burned') else data.averages.month.get('calories', 0) }}</div>
                             <div class="stat-label">Avg Burned kcal</div>
                         </div>
                     </div>
                     <div class="col-md-3 col-6">
                         <div class="stat-card text-center">
-                            <div class="stat-value">{{ data.averages.month.calories_consumed if data.averages.month.calories_consumed > 0 else '-' }}</div>
+                            <div class="stat-value">{{ data.averages.month.get('calories_consumed', 0) if data.averages.month.get('calories_consumed', 0) > 0 else '-' }}</div>
                             <div class="stat-label">Avg Consumed kcal</div>
                         </div>
                     </div>
