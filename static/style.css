@@ -116,6 +116,35 @@ section {
     margin-bottom: 3rem;
 }
 
+.activity-sleep-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.activity, .sleep-chart {
+    margin-bottom: 0;
+}
+
+.charts-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.chart-container {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.chart-container canvas {
+    max-height: 250px;
+}
+
 h2 {
     font-size: 1.25rem;
     margin-bottom: 0.5rem;
@@ -266,5 +295,13 @@ footer {
     
     #heatmap {
         overflow-x: scroll;
+    }
+    
+    .activity-sleep-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .charts-row {
+        grid-template-columns: 1fr;
     }
 }

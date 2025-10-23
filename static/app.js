@@ -41,6 +41,187 @@ if (!data) {
 } else {
     renderHeatmap();
     renderSleepChart();
+    renderStepsChart();
+    renderWeightChart();
+    renderFoodChart();
+}
+
+function getChartColors() {
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    return {
+        text: isDark ? '#c9d1d9' : '#24292f',
+        grid: isDark ? '#30363d' : '#d0d7de',
+        accent: isDark ? '#58a6ff' : '#0969da',
+        green: isDark ? '#39d353' : '#30a14e',
+        red: isDark ? '#ff7b72' : '#cf222e'
+    };
+}
+
+function renderStepsChart() {
+    const ctx = document.getElementById('steps-chart');
+    if (!ctx) return;
+    
+    const colors = getChartColors();
+    const monthAgo = new Date();
+    monthAgo.setDate(monthAgo.getDate() - 30);
+    
+    const last30Days = [];
+    for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        last30Days.push(d.toISOString().split('T')[0]);
+    }
+    
+    const stepsData = last30Days.map(date => {
+        const day = data.daily_data[date];
+        return day?.steps || 0;
+    });
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: last30Days.map(d => new Date(d).getDate()),
+            datasets: [{
+                label: 'Steps',
+                data: stepsData,
+                borderColor: colors.accent,
+                backgroundColor: colors.accent + '20',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: colors.text },
+                    grid: { color: colors.grid }
+                },
+                x: {
+                    ticks: { color: colors.text },
+                    grid: { color: colors.grid }
+                }
+            }
+        }
+    });
+}
+
+function renderWeightChart() {
+    const ctx = document.getElementById('weight-chart');
+    if (!ctx) return;
+    
+    const colors = getChartColors();
+    const daysAgo = new Date();
+    daysAgo.setDate(daysAgo.getDate() - 90);
+    
+    const weightEntries = Object.entries(data.daily_data)
+        .filter(([date, day]) => {
+            const d = new Date(date);
+            return d >= daysAgo && day.weight;
+        })
+        .sort(([a], [b]) => a.localeCompare(b));
+    
+    if (weightEntries.length === 0) {
+        ctx.parentElement.style.display = 'none';
+        return;
+    }
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: weightEntries.map(([date]) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+            datasets: [{
+                label: 'Weight (kg)',
+                data: weightEntries.map(([, day]) => day.weight),
+                borderColor: colors.green,
+                backgroundColor: colors.green + '20',
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    ticks: { color: colors.text },
+                    grid: { color: colors.grid }
+                },
+                x: {
+                    ticks: { color: colors.text, maxRotation: 45 },
+                    grid: { color: colors.grid }
+                }
+            }
+        }
+    });
+}
+
+function renderFoodChart() {
+    const ctx = document.getElementById('food-chart');
+    if (!ctx) return;
+    
+    const colors = getChartColors();
+    const daysAgo = new Date();
+    daysAgo.setDate(daysAgo.getDate() - 14);
+    
+    const last14Days = [];
+    for (let i = 13; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        last14Days.push(d.toISOString().split('T')[0]);
+    }
+    
+    const foodData = last14Days.map(date => {
+        const day = data.daily_data[date];
+        if (!day?.food_log) return 0;
+        return day.food_log.reduce((sum, entry) => sum + entry.calories, 0);
+    });
+    
+    const hasData = foodData.some(v => v > 0);
+    if (!hasData) {
+        ctx.parentElement.style.display = 'none';
+        return;
+    }
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: last14Days.map(d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+            datasets: [{
+                label: 'Calories',
+                data: foodData,
+                backgroundColor: colors.red + '80',
+                borderColor: colors.red,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: colors.text },
+                    grid: { color: colors.grid }
+                },
+                x: {
+                    ticks: { color: colors.text, maxRotation: 45 },
+                    grid: { color: colors.grid }
+                }
+            }
+        }
+    });
 }
 
 function renderHeatmap() {

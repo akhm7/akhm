@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ profile.name }} - Stats</title>
     <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -30,6 +31,11 @@
                     <div class="stat-icon">👟</div>
                     <div class="stat-value">{{ "{:,}".format(data.averages.month.steps) }}</div>
                     <div class="stat-label">avg steps/day</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🏃</div>
+                    <div class="stat-value">{{ data.averages.month.distance_km }}</div>
+                    <div class="stat-label">avg km/day</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">🔥</div>
@@ -91,16 +97,39 @@
                 {% endif %}
             </section>
 
-            <section class="activity">
-                <h2>🔥 Activity Heatmap</h2>
-                <p class="section-subtitle">Last 30 days</p>
-                <div id="heatmap"></div>
+            <div class="activity-sleep-row">
+                <section class="activity">
+                    <h2>🔥 Activity Heatmap</h2>
+                    <p class="section-subtitle">Last 30 days</p>
+                    <div id="heatmap"></div>
+                </section>
+
+                <section class="sleep-chart">
+                    <h2>😴 Sleep Pattern</h2>
+                    <p class="section-subtitle">Average over last month</p>
+                    <div id="sleep-bars"></div>
+                </section>
+            </div>
+
+            <section class="charts-row">
+                <div class="chart-container">
+                    <h2>👟 Steps Trend</h2>
+                    <p class="section-subtitle">Last 30 days</p>
+                    <canvas id="steps-chart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h2>⚖️ Weight Progress</h2>
+                    <p class="section-subtitle">Last 90 days</p>
+                    <canvas id="weight-chart"></canvas>
+                </div>
             </section>
 
-            <section class="sleep-chart">
-                <h2>😴 Sleep Pattern</h2>
-                <p class="section-subtitle">Average over last month</p>
-                <div id="sleep-bars"></div>
+            <section class="charts-row">
+                <div class="chart-container">
+                    <h2>🍕 Food Calories</h2>
+                    <p class="section-subtitle">Last 14 days</p>
+                    <canvas id="food-chart"></canvas>
+                </div>
             </section>
         </main>
 

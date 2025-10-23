@@ -289,6 +289,7 @@ def calculate_averages(daily_data):
     month_ago = datetime.now() - timedelta(days=30)
     month_steps = []
     month_calories = []
+    month_distance = []
     month_sleep = []
     
     for date_str, day in daily_data.items():
@@ -306,6 +307,8 @@ def calculate_averages(daily_data):
                 month_steps.append(day["steps"])
                 if day["calories"]:
                     month_calories.append(day["calories"])
+                if day["distance_km"]:
+                    month_distance.append(day["distance_km"])
         
         if day["sleep"]["total_minutes"]:
             all_sleep.append(day["sleep"]["total_minutes"])
@@ -327,6 +330,7 @@ def calculate_averages(daily_data):
         "month": {
             "steps": round(sum(month_steps) / len(month_steps)) if month_steps else 0,
             "calories": round(sum(month_calories) / len(month_calories)) if month_calories else 0,
+            "distance_km": round(sum(month_distance) / len(month_distance), 2) if month_distance else 0,
             "sleep_minutes": round(sum(month_sleep) / len(month_sleep)) if month_sleep else 0,
             "days_with_data": len(month_steps)
         },
