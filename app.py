@@ -52,6 +52,7 @@ async def get_data():
 @app.post("/update")
 async def update_data():
     """Обновление данных (вызывать через cron)"""
+    import traceback
     try:
         client = Garmin("xgm.suite@gmail.com", "@Akhmedov4702468")
         client.login()
@@ -115,9 +116,13 @@ async def update_data():
         })
     
     except Exception as e:
+        error_trace = traceback.format_exc()
+        print(f"ERROR: {str(e)}")
+        print(f"TRACEBACK: {error_trace}")
         return JSONResponse({
             "status": "error",
-            "message": str(e)
+            "message": str(e),
+            "trace": error_trace
         }, status_code=500)
 
 def process_day_data(date_str, stats, sleep_data):
