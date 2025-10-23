@@ -67,7 +67,7 @@
                             <div class="stat-label">Avg Sleep</div>
                         </div>
                     </div>
-                    {% if data.averages.month.water_ml > 0 %}
+                    {% if data.averages.month.get('water_ml', 0) > 0 %}
                     <div class="col-md-3 col-6">
                         <div class="stat-card text-center">
                             <div class="stat-value">{{ (data.averages.month.water_ml / 1000) | round(1) }}L</div>
