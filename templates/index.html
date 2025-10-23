@@ -3,82 +3,309 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ profile.name }} - Stats</title>
+    <title>{{ profile.name }} - Health Analytics</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        body { background: #f8f9fa; }
-        .stat-card { background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .chart-container { background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); min-height: 300px; }
-        .nav-tabs .nav-link { color: #495057; }
-        .nav-tabs .nav-link.active { color: #0d6efd; font-weight: 500; }
-        h1 { font-size: 1.75rem; font-weight: 600; }
-        .stat-value { font-size: 2rem; font-weight: 600; color: #0d6efd; }
-        .stat-label { font-size: 0.875rem; color: #6c757d; text-transform: uppercase; }
+        :root {
+            --bg-primary: #1a1d23;
+            --bg-secondary: #232831;
+            --bg-tertiary: #2d333b;
+            --border-color: #3d444d;
+            --text-primary: #e6edf3;
+            --text-secondary: #9198a1;
+            --accent: #58a6ff;
+            --accent-muted: #1f6feb;
+            --success: #3fb950;
+            --warning: #d29922;
+            --danger: #f85149;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        .container { max-width: 1400px; }
+
+        .header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .header .role {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.25rem;
+        }
+
+        .chart-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .chart-container h5 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+        }
+
+        .today-stats {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .today-stats h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+        }
+
+        .quick-entry {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .quick-entry h5 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+        }
+
+        .quick-entry .form-control {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .quick-entry .form-control:focus {
+            background: var(--bg-primary);
+            border-color: var(--accent);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.1);
+        }
+
+        .quick-entry .form-control::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        .quick-entry .btn {
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: var(--accent-muted);
+            border-color: var(--accent-muted);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .btn-outline-secondary {
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .btn-outline-secondary:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-success {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .nav-tabs {
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--text-secondary);
+            border: none;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--text-primary);
+            border: none;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--accent);
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .footer {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            padding: 2rem 0 1rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 2rem;
+        }
+
+        .alert {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .input-group-text {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
     </style>
 </head>
 <body>
     <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="header d-flex justify-content-between align-items-center">
             <div>
-                <h1 class="mb-1">{{ profile.name }}</h1>
-                <p class="text-muted mb-0">{{ profile.role }}</p>
+                <h1>{{ profile.name }}</h1>
+                <div class="role">{{ profile.role }}</div>
             </div>
-            <a href="/admin" class="btn btn-outline-primary">Admin</a>
+            <div>
+                <button onclick="document.getElementById('update-btn').click()" class="btn btn-success">Sync Garmin</button>
+                <a href="/admin" class="btn btn-outline-secondary ms-2">Data Management</a>
+            </div>
         </div>
 
         {% if data %}
-        <!-- Today's Stats -->
-        <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-            <div class="card-body">
-                <h4 class="mb-3">📅 Today's Progress</h4>
-                <div class="row g-3">
-                    <div class="col-md-2 col-4">
-                        <div class="text-center">
-                            <div style="font-size: 1.5rem; font-weight: 600;">
-                                {{ "{:,}".format(data.today.steps) if data.today.steps else '0' }}
-                            </div>
-                            <div style="font-size: 0.75rem; opacity: 0.9;">Steps</div>
+        <!-- Quick Entry -->
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <div class="quick-entry">
+                    <h5>Quick Entry</h5>
+                    <form id="quick-weight-form" class="mb-3">
+                        <div class="input-group input-group-sm">
+                            <input type="number" class="form-control" id="quick-weight" step="0.1" placeholder="Weight">
+                            <span class="input-group-text">kg</span>
+                            <button type="submit" class="btn btn-primary">Add</button>
                         </div>
-                    </div>
-                    <div class="col-md-2 col-4">
-                        <div class="text-center">
-                            <div style="font-size: 1.5rem; font-weight: 600;">
-                                {{ data.today.distance_km if data.today.distance_km else '0.0' }}
-                            </div>
-                            <div style="font-size: 0.75rem; opacity: 0.9;">km</div>
+                    </form>
+                    <form id="quick-water-form" class="mb-3">
+                        <div class="input-group input-group-sm">
+                            <input type="number" class="form-control" id="quick-water" step="50" placeholder="Water">
+                            <span class="input-group-text">ml</span>
+                            <button type="submit" class="btn btn-primary">Add</button>
                         </div>
-                    </div>
-                    <div class="col-md-2 col-4">
-                        <div class="text-center">
-                            <div style="font-size: 1.5rem; font-weight: 600;">
-                                {{ data.today.calories_burned if data.today.calories_burned else '0' }}
-                            </div>
-                            <div style="font-size: 0.75rem; opacity: 0.9;">Burned</div>
+                    </form>
+                    <form id="quick-calories-form">
+                        <div class="input-group input-group-sm">
+                            <input type="number" class="form-control" id="quick-calories" placeholder="Calories">
+                            <span class="input-group-text">kcal</span>
+                            <button type="submit" class="btn btn-primary">Add</button>
                         </div>
-                    </div>
-                    <div class="col-md-2 col-4">
-                        <div class="text-center">
-                            <div style="font-size: 1.5rem; font-weight: 600;">
-                                {{ data.today.calories_consumed if data.today.calories_consumed else '0' }}
+                    </form>
+                </div>
+            </div>
+
+            <!-- Today's Stats -->
+            <div class="col-md-8">
+                <div class="today-stats">
+                    <h4>Today</h4>
+                    <div class="row g-2">
+                        <div class="col-md-2 col-4">
+                            <div class="text-center">
+                                <div class="stat-value">{{ "{:,}".format(data.today.steps) if data.today.steps else '0' }}</div>
+                                <div class="stat-label">Steps</div>
                             </div>
-                            <div style="font-size: 0.75rem; opacity: 0.9;">Consumed</div>
                         </div>
-                    </div>
-                    <div class="col-md-2 col-4">
-                        <div class="text-center">
-                            <div style="font-size: 1.5rem; font-weight: 600;">
-                                {{ (data.today.water_ml / 1000) | round(1) if data.today.water_ml else '0.0' }}L
+                        <div class="col-md-2 col-4">
+                            <div class="text-center">
+                                <div class="stat-value">{{ data.today.distance_km if data.today.distance_km else '0.0' }}</div>
+                                <div class="stat-label">km</div>
                             </div>
-                            <div style="font-size: 0.75rem; opacity: 0.9;">Water</div>
                         </div>
-                    </div>
-                    <div class="col-md-2 col-4">
-                        <div class="text-center">
-                            <div style="font-size: 1.5rem; font-weight: 600;">
-                                {{ (data.yesterday_sleep.total_minutes // 60) if data.yesterday_sleep.total_minutes else '0' }}h {{ (data.yesterday_sleep.total_minutes % 60) if data.yesterday_sleep.total_minutes else '0' }}m
+                        <div class="col-md-2 col-4">
+                            <div class="text-center">
+                                <div class="stat-value">{{ data.today.calories_burned if data.today.calories_burned else '0' }}</div>
+                                <div class="stat-label">Burned</div>
                             </div>
-                            <div style="font-size: 0.75rem; opacity: 0.9;">Sleep (Yesterday)</div>
+                        </div>
+                        <div class="col-md-2 col-4">
+                            <div class="text-center">
+                                <div class="stat-value">{{ data.today.calories_consumed if data.today.calories_consumed else '0' }}</div>
+                                <div class="stat-label">Consumed</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-4">
+                            <div class="text-center">
+                                <div class="stat-value">{{ (data.today.water_ml / 1000) | round(1) if data.today.water_ml else '0.0' }}L</div>
+                                <div class="stat-label">Water</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-4">
+                            <div class="text-center">
+                                <div class="stat-value">{{ (data.yesterday_sleep.total_minutes // 60) if data.yesterday_sleep.total_minutes else '0' }}h</div>
+                                <div class="stat-label">Sleep</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -86,12 +313,12 @@
         </div>
 
         <!-- Period Tabs -->
-        <ul class="nav nav-tabs mb-4" id="periodTabs" role="tablist">
+        <ul class="nav nav-tabs" id="periodTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="month-tab" data-bs-toggle="tab" data-bs-target="#month" type="button">📅 Month</button>
+                <button class="nav-link active" id="month-tab" data-bs-toggle="tab" data-bs-target="#month" type="button">Month</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="year-tab" data-bs-toggle="tab" data-bs-target="#year" type="button">📊 Year</button>
+                <button class="nav-link" id="year-tab" data-bs-toggle="tab" data-bs-target="#year" type="button">Year</button>
             </li>
         </ul>
 
@@ -174,38 +401,39 @@
         <div class="row g-3">
             <div class="col-lg-6">
                 <div class="chart-container">
-                    <h5 class="mb-3">📊 Steps Trend (30 days)</h5>
+                    <h5>Steps (30d)</h5>
                     <canvas id="steps-chart"></canvas>
                 </div>
             </div>
             <div class="col-lg-6">
                 <div class="chart-container">
-                    <h5 class="mb-3">🔥 Calories (30 days)</h5>
+                    <h5>Calories (30d)</h5>
                     <canvas id="calories-chart"></canvas>
                 </div>
             </div>
             <div class="col-lg-6">
                 <div class="chart-container">
-                    <h5 class="mb-3">😴 Sleep Duration (30 days)</h5>
+                    <h5>Sleep (30d)</h5>
                     <canvas id="sleep-chart"></canvas>
                 </div>
             </div>
             <div class="col-lg-6" id="water-container">
                 <div class="chart-container">
-                    <h5 class="mb-3">💧 Water Intake (30 days)</h5>
+                    <h5>Water (30d)</h5>
                     <canvas id="water-chart"></canvas>
                 </div>
             </div>
             <div class="col-lg-6" id="weight-container">
                 <div class="chart-container">
-                    <h5 class="mb-3">⚖️ Weight Progress (90 days)</h5>
+                    <h5>Weight (90d)</h5>
                     <canvas id="weight-chart"></canvas>
                 </div>
             </div>
         </div>
 
-        <div class="text-center text-muted mt-4 small">
-            Last update: {{ data.last_update[:10] if data.last_update else 'N/A' }}
+        <div class="footer">
+            Last sync: {{ data.last_update[:16] if data.last_update else 'N/A' }}
+            <button id="update-btn" style="display: none;"></button>
         </div>
         {% else %}
         <div class="alert alert-info text-center">

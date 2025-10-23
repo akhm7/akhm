@@ -1,3 +1,69 @@
+// Quick entry forms
+document.getElementById('quick-weight-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const weight = document.getElementById('quick-weight').value;
+    if (!weight) return;
+
+    const formData = new FormData();
+    formData.append('weight', weight);
+
+    const res = await fetch('/api/weight', { method: 'POST', body: formData });
+    if (res.ok) {
+        document.getElementById('quick-weight').value = '';
+        location.reload();
+    }
+});
+
+document.getElementById('quick-water-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const water = document.getElementById('quick-water').value;
+    if (!water) return;
+
+    const formData = new FormData();
+    formData.append('water_ml', water);
+
+    const res = await fetch('/api/water', { method: 'POST', body: formData });
+    if (res.ok) {
+        document.getElementById('quick-water').value = '';
+        location.reload();
+    }
+});
+
+document.getElementById('quick-calories-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const calories = document.getElementById('quick-calories').value;
+    if (!calories) return;
+
+    const now = new Date();
+    const datetime = now.toISOString().slice(0, 16);
+
+    const formData = new FormData();
+    formData.append('calories', calories);
+    formData.append('datetime', datetime);
+
+    const res = await fetch('/api/calories', { method: 'POST', body: formData });
+    if (res.ok) {
+        document.getElementById('quick-calories').value = '';
+        location.reload();
+    }
+});
+
+// Sync button
+document.getElementById('update-btn')?.addEventListener('click', async () => {
+    const btn = document.querySelector('.btn-success');
+    const originalText = btn.textContent;
+    btn.textContent = 'Syncing...';
+    btn.disabled = true;
+
+    const res = await fetch('/update', { method: 'POST' });
+    if (res.ok) {
+        location.reload();
+    } else {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+});
+
 if (!data) {
     console.log('No data available');
 } else {
@@ -7,6 +73,9 @@ if (!data) {
     renderWeightChart();
     renderWaterChart();
 }
+
+Chart.defaults.color = '#9198a1';
+Chart.defaults.borderColor = '#3d444d';
 
 function getLast30Days() {
     const days = [];
@@ -45,10 +114,10 @@ function renderStepsChart() {
             datasets: [{
                 label: 'Steps',
                 data: stepsData,
-                backgroundColor: 'rgba(13, 110, 253, 0.7)',
-                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(88, 166, 255, 0.5)',
+                borderColor: '#58a6ff',
                 borderWidth: 1,
-                borderRadius: 4
+                borderRadius: 3
             }]
         },
         options: {
@@ -57,6 +126,9 @@ function renderStepsChart() {
             plugins: {
                 legend: { display: false },
                 tooltip: {
+                    backgroundColor: '#2d333b',
+                    borderColor: '#3d444d',
+                    borderWidth: 1,
                     callbacks: {
                         label: function(context) {
                             return context.parsed.y.toLocaleString() + ' steps';
@@ -67,16 +139,18 @@ function renderStepsChart() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: { 
-                        color: '#6c757d',
+                    border: { display: false },
+                    ticks: {
+                        color: '#9198a1',
                         callback: function(value) {
                             return value >= 1000 ? (value/1000) + 'k' : value;
                         }
                     },
-                    grid: { color: 'rgba(0,0,0,0.05)' }
+                    grid: { color: '#3d444d' }
                 },
                 x: {
-                    ticks: { color: '#6c757d' },
+                    border: { display: false },
+                    ticks: { color: '#9198a1' },
                     grid: { display: false }
                 }
             }
@@ -108,29 +182,30 @@ function renderCaloriesChart() {
     const datasets = [{
         label: 'Burned',
         data: burnedData,
-        backgroundColor: 'rgba(220, 53, 69, 0.7)',
-        borderColor: '#dc3545',
-        borderWidth: 2,
+        backgroundColor: 'rgba(248, 81, 73, 0.5)',
+        borderColor: '#f85149',
+        borderWidth: 1,
+        borderRadius: 3,
         type: 'bar',
         order: 2
     }];
-    
+
     if (hasConsumedData) {
         datasets.push({
             label: 'Consumed',
             data: consumedData,
-            backgroundColor: 'rgba(25, 135, 84, 0.2)',
-            borderColor: '#198754',
+            backgroundColor: 'rgba(63, 185, 80, 0.1)',
+            borderColor: '#3fb950',
             borderWidth: 2,
             fill: true,
             tension: 0.3,
             type: 'line',
             order: 1,
-            pointRadius: 3,
-            pointHoverRadius: 5
+            pointRadius: 2,
+            pointHoverRadius: 4
         });
     }
-    
+
     new Chart(ctx, {
         type: 'bar',
         data: {
@@ -141,12 +216,15 @@ function renderCaloriesChart() {
             responsive: true,
             maintainAspectRatio: true,
             plugins: {
-                legend: { 
+                legend: {
                     display: hasConsumedData,
                     position: 'top',
-                    labels: { color: '#6c757d', usePointStyle: true, padding: 15 }
+                    labels: { color: '#9198a1', usePointStyle: true, padding: 10, font: { size: 11 } }
                 },
                 tooltip: {
+                    backgroundColor: '#2d333b',
+                    borderColor: '#3d444d',
+                    borderWidth: 1,
                     callbacks: {
                         label: function(context) {
                             return context.dataset.label + ': ' + context.parsed.y.toLocaleString() + ' kcal';
@@ -157,16 +235,18 @@ function renderCaloriesChart() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: { 
-                        color: '#6c757d',
+                    border: { display: false },
+                    ticks: {
+                        color: '#9198a1',
                         callback: function(value) {
                             return value >= 1000 ? (value/1000) + 'k' : value;
                         }
                     },
-                    grid: { color: 'rgba(0,0,0,0.05)' }
+                    grid: { color: '#3d444d' }
                 },
                 x: {
-                    ticks: { color: '#6c757d' },
+                    border: { display: false },
+                    ticks: { color: '#9198a1' },
                     grid: { display: false }
                 }
             }
@@ -208,25 +288,25 @@ function renderSleepChart() {
                 {
                     label: 'Deep',
                     data: deepData,
-                    backgroundColor: '#0d6efd',
+                    backgroundColor: '#58a6ff',
                     stack: 'sleep'
                 },
                 {
                     label: 'Light',
                     data: lightData,
-                    backgroundColor: '#6ea8fe',
+                    backgroundColor: '#1f6feb',
                     stack: 'sleep'
                 },
                 {
                     label: 'REM',
                     data: remData,
-                    backgroundColor: '#9ec5fe',
+                    backgroundColor: '#388bfd',
                     stack: 'sleep'
                 },
                 {
                     label: 'Awake',
                     data: awakeData,
-                    backgroundColor: '#e7f1ff',
+                    backgroundColor: '#2d333b',
                     stack: 'sleep'
                 }
             ]
@@ -235,11 +315,14 @@ function renderSleepChart() {
             responsive: true,
             maintainAspectRatio: true,
             plugins: {
-                legend: { 
+                legend: {
                     position: 'top',
-                    labels: { color: '#6c757d', usePointStyle: true, boxWidth: 12, padding: 10 }
+                    labels: { color: '#9198a1', usePointStyle: true, boxWidth: 10, padding: 8, font: { size: 11 } }
                 },
                 tooltip: {
+                    backgroundColor: '#2d333b',
+                    borderColor: '#3d444d',
+                    borderWidth: 1,
                     callbacks: {
                         label: function(context) {
                             const hours = Math.floor(context.parsed.y / 60);
@@ -253,18 +336,20 @@ function renderSleepChart() {
                 y: {
                     stacked: true,
                     beginAtZero: true,
-                    ticks: { 
-                        color: '#6c757d',
+                    border: { display: false },
+                    ticks: {
+                        color: '#9198a1',
                         callback: function(value) {
                             const hours = Math.floor(value / 60);
                             return hours + 'h';
                         }
                     },
-                    grid: { color: 'rgba(0,0,0,0.05)' }
+                    grid: { color: '#3d444d' }
                 },
                 x: {
                     stacked: true,
-                    ticks: { color: '#6c757d' },
+                    border: { display: false },
+                    ticks: { color: '#9198a1' },
                     grid: { display: false }
                 }
             }
@@ -297,13 +382,13 @@ function renderWeightChart() {
             datasets: [{
                 label: 'Weight (kg)',
                 data: weightEntries.map(e => e.weight),
-                borderColor: '#198754',
-                backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                borderColor: '#3fb950',
+                backgroundColor: 'rgba(63, 185, 80, 0.1)',
                 tension: 0.3,
                 fill: true,
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                pointBackgroundColor: '#198754',
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                pointBackgroundColor: '#3fb950',
                 borderWidth: 2
             }]
         },
@@ -313,6 +398,9 @@ function renderWeightChart() {
             plugins: {
                 legend: { display: false },
                 tooltip: {
+                    backgroundColor: '#2d333b',
+                    borderColor: '#3d444d',
+                    borderWidth: 1,
                     callbacks: {
                         label: function(context) {
                             return context.parsed.y.toFixed(1) + ' kg';
@@ -322,17 +410,19 @@ function renderWeightChart() {
             },
             scales: {
                 y: {
-                    ticks: { 
-                        color: '#6c757d',
+                    border: { display: false },
+                    ticks: {
+                        color: '#9198a1',
                         callback: function(value) {
                             return value.toFixed(1) + ' kg';
                         }
                     },
-                    grid: { color: 'rgba(0,0,0,0.05)' }
+                    grid: { color: '#3d444d' }
                 },
                 x: {
-                    ticks: { 
-                        color: '#6c757d',
+                    border: { display: false },
+                    ticks: {
+                        color: '#9198a1',
                         maxRotation: 45,
                         minRotation: 45
                     },
@@ -375,20 +465,20 @@ function renderWaterChart() {
             labels: last30Days.map(d => new Date(d).getDate()),
             datasets: [
                 {
-                    label: 'Water Intake',
+                    label: 'Water',
                     data: waterData,
-                    backgroundColor: waterData.map(val => 
-                        val >= targetWater ? 'rgba(13, 202, 240, 0.7)' : 'rgba(13, 202, 240, 0.4)'
+                    backgroundColor: waterData.map(val =>
+                        val >= targetWater ? 'rgba(88, 166, 255, 0.6)' : 'rgba(88, 166, 255, 0.3)'
                     ),
-                    borderColor: '#0dcaf0',
+                    borderColor: '#58a6ff',
                     borderWidth: 1,
-                    borderRadius: 4
+                    borderRadius: 3
                 },
                 {
                     label: 'Target (2L)',
                     data: new Array(last30Days.length).fill(targetWater),
                     type: 'line',
-                    borderColor: '#fd7e14',
+                    borderColor: '#d29922',
                     borderWidth: 2,
                     borderDash: [5, 5],
                     fill: false,
@@ -401,12 +491,15 @@ function renderWaterChart() {
             responsive: true,
             maintainAspectRatio: true,
             plugins: {
-                legend: { 
+                legend: {
                     display: true,
                     position: 'top',
-                    labels: { color: '#6c757d', usePointStyle: true, padding: 10 }
+                    labels: { color: '#9198a1', usePointStyle: true, padding: 8, font: { size: 11 } }
                 },
                 tooltip: {
+                    backgroundColor: '#2d333b',
+                    borderColor: '#3d444d',
+                    borderWidth: 1,
                     callbacks: {
                         label: function(context) {
                             if (context.dataset.label === 'Target (2L)') {
@@ -421,16 +514,18 @@ function renderWaterChart() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: { 
-                        color: '#6c757d',
+                    border: { display: false },
+                    ticks: {
+                        color: '#9198a1',
                         callback: function(value) {
                             return (value / 1000).toFixed(1) + 'L';
                         }
                     },
-                    grid: { color: 'rgba(0,0,0,0.05)' }
+                    grid: { color: '#3d444d' }
                 },
                 x: {
-                    ticks: { color: '#6c757d' },
+                    border: { display: false },
+                    ticks: { color: '#9198a1' },
                     grid: { display: false }
                 }
             }
