@@ -37,6 +37,24 @@ async def index(request: Request):
         })
     
     parsed_data = json.loads(data)
+    
+    # Добавляем данные за сегодня
+    today_str = datetime.today().strftime('%Y-%m-%d')
+    yesterday_str = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d')
+    
+    today_data = parsed_data.get("daily_data", {}).get(today_str, {})
+    yesterday_data = parsed_data.get("daily_data", {}).get(yesterday_str, {})
+    
+    parsed_data["today"] = {
+        "steps": today_data.get("steps"),
+        "distance_km": today_data.get("distance_km"),
+        "calories_burned": today_data.get("calories"),
+        "calories_consumed": sum(entry["calories"] for entry in today_data.get("food_log", [])) if today_data.get("food_log") else 0,
+        "water_ml": today_data.get("water_ml")
+    }
+    
+    parsed_data["yesterday_sleep"] = yesterday_data.get("sleep", {})
+    
     return templates.TemplateResponse("index.html", {
         "request": request,
         "profile": PROFILE,
