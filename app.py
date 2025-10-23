@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Body
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -7,6 +7,7 @@ import json
 import os
 from datetime import datetime, timedelta
 from garminconnect import Garmin
+from typing import Optional
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -49,6 +50,104 @@ async def get_data():
     if not data:
         return JSONResponse({"error": "No data available"}, status_code=404)
     return JSONResponse(json.loads(data))
+
+@app.post("/api/weight")
+async def add_weight(
+    weight: float = Body(..., embed=True),
+    date: Optional[str] = Body(None, embed=True)
+):
+    """Добавить вес за день"""
+    try:
+        date_str = date or datetime.today().strftime('%Y-%m-%d')
+        
+        # Получаем существующие данные
+        existing_data = r.get("garmin_data")
+        if not existing_data:
+            return JSONResponse({"error": "No data initialized. Run /update first"}, status_code=400)
+        
+        result = json.loads(existing_data)
+        daily_data = result.get("daily_data", {})
+        
+        # Добавляем или обновляем вес
+        if date_str not in daily_data:
+            daily_data[date_str] = {
+                "date": date_str,
+                "steps": None,
+                "calories": None,
+                "distance_km": None,
+                "sleep": {"total_minutes": None},
+                "weight": weight
+            }
+        else:
+            daily_data[date_str]["weight"] = weight
+        
+        result["daily_data"] = daily_data
+        result["last_update"] = datetime.now().isoformat()
+        
+        # Сохраняем
+        r.set("garmin_data", json.dumps(result))
+        
+        return JSONResponse({
+            "status": "success",
+            "date": date_str,
+            "weight": weight
+        })
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+
+@app.post("/api/calories")
+async def add_calories(
+    calories: int = Body(..., embed=True),
+    datetime_str: str = Body(..., embed=True)
+):
+    """Добавить съеденные калории с датой и временем"""
+    try:
+        # Парсим дату-время
+        dt = datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
+        date_str = dt.strftime('%Y-%m-%d')
+        
+        # Получаем существующие данные
+        existing_data = r.get("garmin_data")
+        if not existing_data:
+            return JSONResponse({"error": "No data initialized. Run /update first"}, status_code=400)
+        
+        result = json.loads(existing_data)
+        daily_data = result.get("daily_data", {})
+        
+        # Инициализируем день если нет
+        if date_str not in daily_data:
+            daily_data[date_str] = {
+                "date": date_str,
+                "steps": None,
+                "calories": None,
+                "distance_km": None,
+                "sleep": {"total_minutes": None},
+                "food_log": []
+            }
+        
+        # Добавляем запись о еде
+        if "food_log" not in daily_data[date_str]:
+            daily_data[date_str]["food_log"] = []
+        
+        daily_data[date_str]["food_log"].append({
+            "calories": calories,
+            "datetime": datetime_str
+        })
+        
+        result["daily_data"] = daily_data
+        result["last_update"] = datetime.now().isoformat()
+        
+        # Сохраняем
+        r.set("garmin_data", json.dumps(result))
+        
+        return JSONResponse({
+            "status": "success",
+            "date": date_str,
+            "calories": calories,
+            "datetime": datetime_str
+        })
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
 
 @app.post("/update")
 async def update_data():
@@ -184,26 +283,58 @@ def calculate_averages(daily_data):
     all_calories = []
     all_distance = []
     all_sleep = []
+    all_weight = []
     
-    for day in daily_data.values():
+    # За последний месяц
+    month_ago = datetime.now() - timedelta(days=30)
+    month_steps = []
+    month_calories = []
+    month_sleep = []
+    
+    for date_str, day in daily_data.items():
+        day_date = datetime.strptime(date_str, '%Y-%m-%d')
+        
         if day["steps"]:
             all_steps.append(day["steps"])
             if day["calories"]:
                 all_calories.append(day["calories"])
             if day["distance_km"]:
                 all_distance.append(day["distance_km"])
+            
+            # За месяц
+            if day_date >= month_ago:
+                month_steps.append(day["steps"])
+                if day["calories"]:
+                    month_calories.append(day["calories"])
         
         if day["sleep"]["total_minutes"]:
             all_sleep.append(day["sleep"]["total_minutes"])
+            if day_date >= month_ago:
+                month_sleep.append(day["sleep"]["total_minutes"])
+        
+        if day.get("weight"):
+            all_weight.append(day["weight"])
     
     return {
-        "steps": round(sum(all_steps) / len(all_steps)) if all_steps else 0,
-        "calories": round(sum(all_calories) / len(all_calories)) if all_calories else 0,
-        "distance_km": round(sum(all_distance) / len(all_distance), 2) if all_distance else 0,
-        "sleep_minutes": round(sum(all_sleep) / len(all_sleep)) if all_sleep else 0,
-        "total": {
+        "year": {
+            "steps": round(sum(all_steps) / len(all_steps)) if all_steps else 0,
+            "calories": round(sum(all_calories) / len(all_calories)) if all_calories else 0,
+            "distance_km": round(sum(all_distance) / len(all_distance), 2) if all_distance else 0,
+            "sleep_minutes": round(sum(all_sleep) / len(all_sleep)) if all_sleep else 0,
             "days_with_data": len(all_steps),
             "total_steps": sum(all_steps) if all_steps else 0
+        },
+        "month": {
+            "steps": round(sum(month_steps) / len(month_steps)) if month_steps else 0,
+            "calories": round(sum(month_calories) / len(month_calories)) if month_calories else 0,
+            "sleep_minutes": round(sum(month_sleep) / len(month_sleep)) if month_sleep else 0,
+            "days_with_data": len(month_steps)
+        },
+        "weight": {
+            "current": all_weight[-1] if all_weight else None,
+            "average": round(sum(all_weight) / len(all_weight), 1) if all_weight else None,
+            "min": min(all_weight) if all_weight else None,
+            "max": max(all_weight) if all_weight else None
         }
     }
 

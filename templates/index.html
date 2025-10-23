@@ -10,46 +10,102 @@
     <div class="container">
         <header>
             <h1>{{ profile.name }}</h1>
-            <p class="role">{{ profile.role }}</p>
-            <p class="contact">{{ profile.telegram }}</p>
-            <p class="hobbies">{{ profile.hobbies }}</p>
+            <p class="role">💼 {{ profile.role }}</p>
+            <p class="contact">📱 {{ profile.telegram }}</p>
+            <p class="hobbies">🏀 {{ profile.hobbies }}</p>
             <button id="theme-toggle" aria-label="Toggle theme">◐</button>
         </header>
 
         {% if data %}
         <main>
-            <section class="stats-grid">
+            <!-- Переключатель периодов -->
+            <div class="period-toggle">
+                <button class="period-btn active" data-period="month">📅 Month</button>
+                <button class="period-btn" data-period="year">📊 Year</button>
+            </div>
+
+            <!-- Статистика за месяц -->
+            <section class="stats-grid" data-period="month">
                 <div class="stat-card">
-                    <div class="stat-value">{{ "{:,}".format(data.averages.steps) }}</div>
+                    <div class="stat-icon">👟</div>
+                    <div class="stat-value">{{ "{:,}".format(data.averages.month.steps) }}</div>
                     <div class="stat-label">avg steps/day</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">{{ data.averages.distance_km }}</div>
-                    <div class="stat-label">avg km/day</div>
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-value">{{ data.averages.month.calories }}</div>
+                    <div class="stat-label">avg kcal/day</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">{{ data.averages.sleep_minutes // 60 }}h {{ data.averages.sleep_minutes % 60 }}m</div>
+                    <div class="stat-icon">😴</div>
+                    <div class="stat-value">{{ data.averages.month.sleep_minutes // 60 }}h {{ data.averages.month.sleep_minutes % 60 }}m</div>
                     <div class="stat-label">avg sleep</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">{{ data.averages.total.days_with_data }}</div>
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value">{{ data.averages.month.days_with_data }}</div>
                     <div class="stat-label">days tracked</div>
                 </div>
+                {% if data.averages.weight.current %}
+                <div class="stat-card">
+                    <div class="stat-icon">⚖️</div>
+                    <div class="stat-value">{{ data.averages.weight.current }} kg</div>
+                    <div class="stat-label">current weight</div>
+                </div>
+                {% endif %}
+            </section>
+
+            <!-- Статистика за год -->
+            <section class="stats-grid hidden" data-period="year">
+                <div class="stat-card">
+                    <div class="stat-icon">👟</div>
+                    <div class="stat-value">{{ "{:,}".format(data.averages.year.steps) }}</div>
+                    <div class="stat-label">avg steps/day</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🏃</div>
+                    <div class="stat-value">{{ data.averages.year.distance_km }}</div>
+                    <div class="stat-label">avg km/day</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">😴</div>
+                    <div class="stat-value">{{ data.averages.year.sleep_minutes // 60 }}h {{ data.averages.year.sleep_minutes % 60 }}m</div>
+                    <div class="stat-label">avg sleep</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value">{{ "{:,}".format(data.averages.year.total_steps) }}</div>
+                    <div class="stat-label">total steps</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-value">{{ data.averages.year.days_with_data }}</div>
+                    <div class="stat-label">days tracked</div>
+                </div>
+                {% if data.averages.weight.average %}
+                <div class="stat-card">
+                    <div class="stat-icon">⚖️</div>
+                    <div class="stat-value">{{ data.averages.weight.average }} kg</div>
+                    <div class="stat-label">avg weight</div>
+                </div>
+                {% endif %}
             </section>
 
             <section class="activity">
-                <h2>Activity Heatmap</h2>
+                <h2>🔥 Activity Heatmap</h2>
+                <p class="section-subtitle">Last 30 days</p>
                 <div id="heatmap"></div>
             </section>
 
             <section class="sleep-chart">
-                <h2>Sleep Pattern</h2>
+                <h2>😴 Sleep Pattern</h2>
+                <p class="section-subtitle">Average over last month</p>
                 <div id="sleep-bars"></div>
             </section>
         </main>
 
         <footer>
-            <p>Last update: {{ data.last_update[:10] if data.last_update else 'N/A' }}</p>
+            <p>⏱ Last update: {{ data.last_update[:10] if data.last_update else 'N/A' }}</p>
         </footer>
         {% else %}
         <main>

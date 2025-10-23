@@ -118,8 +118,51 @@ section {
 
 h2 {
     font-size: 1.25rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     font-weight: 600;
+}
+
+.section-subtitle {
+    font-size: 0.85rem;
+    opacity: 0.6;
+    margin-bottom: 1rem;
+}
+
+.period-toggle {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.period-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--fg);
+    padding: 0.5rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.period-btn:hover {
+    background: var(--border);
+}
+
+.period-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.hidden {
+    display: none;
 }
 
 #heatmap {
@@ -132,15 +175,15 @@ h2 {
 
 .heatmap-grid {
     display: inline-grid;
-    grid-template-columns: repeat(53, 12px);
-    grid-template-rows: repeat(7, 12px);
+    grid-template-columns: repeat(7, 14px);
+    grid-template-rows: repeat(5, 14px);
     gap: 3px;
-    grid-auto-flow: column;
+    grid-auto-flow: row;
 }
 
 .heatmap-cell {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     border-radius: 2px;
     background: var(--border);
     cursor: pointer;
@@ -149,6 +192,7 @@ h2 {
 
 .heatmap-cell:hover {
     outline: 2px solid var(--fg);
+    transform: scale(1.1);
 }
 
 .heatmap-cell[data-level="1"] { background: var(--green-1); }

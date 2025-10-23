@@ -13,6 +13,29 @@ themeToggle.addEventListener('click', () => {
     localStorage.setItem('theme', next);
 });
 
+// Period toggle
+const periodBtns = document.querySelectorAll('.period-btn');
+const statsSections = document.querySelectorAll('.stats-grid');
+
+periodBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const period = btn.dataset.period;
+        
+        // Update buttons
+        periodBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Update sections
+        statsSections.forEach(section => {
+            if (section.dataset.period === period) {
+                section.classList.remove('hidden');
+            } else {
+                section.classList.add('hidden');
+            }
+        });
+    });
+});
+
 if (!data) {
     console.log('No data available');
 } else {
@@ -25,26 +48,32 @@ function renderHeatmap() {
     const grid = document.createElement('div');
     grid.className = 'heatmap-grid';
     
-    // Получаем все данные и находим максимум для нормализации
     const dailyData = data.daily_data;
-    const steps = Object.values(dailyData)
-        .map(d => d.steps || 0)
-        .filter(s => s > 0);
     
-    const maxSteps = Math.max(...steps);
-    const avgSteps = data.averages.steps;
-    
-    // Генерируем последние 371 день (53 недели)
+    // За последние 30 дней
     const today = new Date();
     const startDate = new Date(today);
-    startDate.setDate(today.getDate() - 370);
+    startDate.setDate(today.getDate() - 29);
     
-    // Начинаем с воскресенья
-    while (startDate.getDay() !== 0) {
+    // Начинаем с понедельника
+    while (startDate.getDay() !== 1) {
         startDate.setDate(startDate.getDate() - 1);
     }
     
-    for (let i = 0; i < 371; i++) {
+    // Находим максимум для нормализации
+    const monthAgo = new Date();
+    monthAgo.setDate(monthAgo.getDate() - 30);
+    const recentSteps = Object.entries(dailyData)
+        .filter(([date]) => new Date(date) >= monthAgo)
+        .map(([, d]) => d.steps || 0)
+        .filter(s => s > 0);
+    
+    const avgSteps = recentSteps.length > 0 
+        ? recentSteps.reduce((a, b) => a + b, 0) / recentSteps.length 
+        : 0;
+    
+    // Генерируем 35 дней (5 недель)
+    for (let i = 0; i < 35; i++) {
         const date = new Date(startDate);
         date.setDate(startDate.getDate() + i);
         
@@ -57,7 +86,7 @@ function renderHeatmap() {
         
         // Уровень активности (0-4)
         let level = 0;
-        if (steps > 0) {
+        if (steps > 0 && avgSteps > 0) {
             if (steps >= avgSteps * 1.5) level = 4;
             else if (steps >= avgSteps * 1.2) level = 3;
             else if (steps >= avgSteps * 0.8) level = 2;
@@ -75,10 +104,17 @@ function renderHeatmap() {
 
 function renderSleepChart() {
     const sleepEl = document.getElementById('sleep-bars');
-    const avgSleep = data.averages.sleep_minutes;
     
-    // Вычисляем средние фазы сна из всех дней
-    const allDays = Object.values(data.daily_data).filter(d => d.sleep.total_minutes);
+    // Берем данные за последний месяц
+    const monthAgo = new Date();
+    monthAgo.setDate(monthAgo.getDate() - 30);
+    
+    const allDays = Object.entries(data.daily_data)
+        .filter(([date, d]) => {
+            const dayDate = new Date(date);
+            return dayDate >= monthAgo && d.sleep.total_minutes;
+        })
+        .map(([, d]) => d);
     
     const phases = {
         'Deep': allDays.map(d => d.sleep.deep_sleep_minutes || 0),
@@ -93,7 +129,6 @@ function renderSleepChart() {
         avgPhases[phase] = values.length > 0 ? Math.round(sum / values.length) : 0;
     }
     
-    // Находим максимум для нормализации
     const maxPhase = Math.max(...Object.values(avgPhases));
     
     for (const [phase, minutes] of Object.entries(avgPhases)) {
