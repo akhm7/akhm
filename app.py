@@ -367,7 +367,8 @@ def process_day_data(date_str, stats, sleep_data):
 def calculate_averages(daily_data):
     """Вычисляет средние значения"""
     all_steps = []
-    all_calories = []
+    all_calories_burned = []
+    all_calories_consumed = []
     all_distance = []
     all_sleep = []
     all_weight = []
@@ -376,7 +377,8 @@ def calculate_averages(daily_data):
     # За последний месяц
     month_ago = datetime.now() - timedelta(days=30)
     month_steps = []
-    month_calories = []
+    month_calories_burned = []
+    month_calories_consumed = []
     month_distance = []
     month_sleep = []
     month_water = []
@@ -387,7 +389,7 @@ def calculate_averages(daily_data):
         if day["steps"]:
             all_steps.append(day["steps"])
             if day["calories"]:
-                all_calories.append(day["calories"])
+                all_calories_burned.append(day["calories"])
             if day["distance_km"]:
                 all_distance.append(day["distance_km"])
             
@@ -395,9 +397,16 @@ def calculate_averages(daily_data):
             if day_date >= month_ago:
                 month_steps.append(day["steps"])
                 if day["calories"]:
-                    month_calories.append(day["calories"])
+                    month_calories_burned.append(day["calories"])
                 if day["distance_km"]:
                     month_distance.append(day["distance_km"])
+        
+        # Съеденные калории
+        if day.get("food_log"):
+            consumed = sum(entry["calories"] for entry in day["food_log"])
+            all_calories_consumed.append(consumed)
+            if day_date >= month_ago:
+                month_calories_consumed.append(consumed)
         
         if day["sleep"]["total_minutes"]:
             all_sleep.append(day["sleep"]["total_minutes"])
@@ -415,7 +424,8 @@ def calculate_averages(daily_data):
     return {
         "year": {
             "steps": round(sum(all_steps) / len(all_steps)) if all_steps else 0,
-            "calories": round(sum(all_calories) / len(all_calories)) if all_calories else 0,
+            "calories_burned": round(sum(all_calories_burned) / len(all_calories_burned)) if all_calories_burned else 0,
+            "calories_consumed": round(sum(all_calories_consumed) / len(all_calories_consumed)) if all_calories_consumed else 0,
             "distance_km": round(sum(all_distance) / len(all_distance), 2) if all_distance else 0,
             "sleep_minutes": round(sum(all_sleep) / len(all_sleep)) if all_sleep else 0,
             "days_with_data": len(all_steps),
@@ -424,7 +434,8 @@ def calculate_averages(daily_data):
         },
         "month": {
             "steps": round(sum(month_steps) / len(month_steps)) if month_steps else 0,
-            "calories": round(sum(month_calories) / len(month_calories)) if month_calories else 0,
+            "calories_burned": round(sum(month_calories_burned) / len(month_calories_burned)) if month_calories_burned else 0,
+            "calories_consumed": round(sum(month_calories_consumed) / len(month_calories_consumed)) if month_calories_consumed else 0,
             "distance_km": round(sum(month_distance) / len(month_distance), 2) if month_distance else 0,
             "sleep_minutes": round(sum(month_sleep) / len(month_sleep)) if month_sleep else 0,
             "days_with_data": len(month_steps),
