@@ -110,33 +110,7 @@ async def add_calories(
     """Добавить съеденные калории с датой и временем"""
     try:
         # Парсим дату-время
-        dt = datetime.fromisoformat(datetime_str.replace('Z', '+00
-
-@app.get("/api/export")
-async def export_data():
-    """Экспорт данных из Redis"""
-    data = r.get("garmin_data")
-    if not data:
-        return JSONResponse({"error": "No data available"}, status_code=404)
-    return JSONResponse(json.loads(data))
-
-@app.post("/api/import")
-async def import_data(data: dict = Body(...)):
-    """Импорт данных в Redis"""
-    try:
-        r.set("garmin_data", json.dumps(data))
-        return JSONResponse({"status": "success", "message": "Data imported successfully"})
-    except Exception as e:
-        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
-
-@app.post("/api/clear")
-async def clear_data():
-    """Очистить все данные из Redis"""
-    try:
-        r.delete("garmin_data")
-        return JSONResponse({"status": "success", "message": "All data cleared"})
-    except Exception as e:
-        return JSONResponse({"status": "error", "message": str(e)}, status_code=500):00'))
+        dt = datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
         date_str = dt.strftime('%Y-%m-%d')
         
         # Получаем существующие данные
@@ -182,6 +156,32 @@ async def clear_data():
     except Exception as e:
         return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
 
+@app.get("/api/export")
+async def export_data():
+    """Экспорт данных из Redis"""
+    data = r.get("garmin_data")
+    if not data:
+        return JSONResponse({"error": "No data available"}, status_code=404)
+    return JSONResponse(json.loads(data))
+
+@app.post("/api/import")
+async def import_data(data: dict = Body(...)):
+    """Импорт данных в Redis"""
+    try:
+        r.set("garmin_data", json.dumps(data))
+        return JSONResponse({"status": "success", "message": "Data imported successfully"})
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+
+@app.post("/api/clear")
+async def clear_data():
+    """Очистить все данные из Redis"""
+    try:
+        r.delete("garmin_data")
+        return JSONResponse({"status": "success", "message": "All data cleared"})
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+    
 @app.post("/update")
 async def update_data():
     """Обновление данных (вызывать через cron)"""
