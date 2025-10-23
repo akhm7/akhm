@@ -4,8 +4,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import redis
 import json
+import os
 from datetime import datetime, timedelta
 from garminconnect import Garmin
+from pathlib import Path
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -54,8 +56,25 @@ async def update_data():
     """Обновление данных (вызывать через cron)"""
     import traceback
     try:
-        client = Garmin("xgm.suite@gmail.com", "@Akhmedov4702468")
-        client.login()
+        # Инициализация Garmin с сохранением токенов
+        tokenstore = Path(".garminconnect")
+        
+        # Создаем клиента
+        client = Garmin()
+        
+        # Проверяем есть ли сохраненные токены
+        if tokenstore.exists():
+            try:
+                client.login(tokenstore)
+            except:
+                # Если токены не работают, логинимся заново
+                tokenstore.unlink()
+                client.login("xgm.suite@gmail.com", "@Akhmedov4702468")
+                client.garth.dump(tokenstore)
+        else:
+            # Первый логин
+            client.login("xgm.suite@gmail.com", "@Akhmedov4702468")
+            client.garth.dump(tokenstore)
         
         # Получаем существующие данные
         existing_data = r.get("garmin_data")

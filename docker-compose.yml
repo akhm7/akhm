@@ -7,6 +7,7 @@ services:
       - redis
     volumes:
       - .:/app
+      - garmin_tokens:/app/.garminconnect
     environment:
       - REDIS_HOST=redis
     restart: unless-stopped
@@ -19,3 +20,4 @@ services:
 
 volumes:
   redis_data:
+  garmin_tokens:
