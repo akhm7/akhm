@@ -5,9 +5,13 @@ from fastapi.templating import Jinja2Templates
 import redis
 import json
 import os
+import socket
 from datetime import datetime, timedelta
 from garminconnect import Garmin
 from typing import Optional
+
+# Увеличиваем таймаут сокетов до 5 минут
+socket.setdefaulttimeout(300)
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -250,50 +254,88 @@ async def clear_data():
 async def update_data():
     """Обновление данных (вызывать через cron)"""
     import traceback
+    import time
     try:
+        print("=" * 50)
+        print("Starting Garmin data update...")
+        print(f"Timestamp: {datetime.now().isoformat()}")
+        
         # Путь к директории с токенами
         tokenstore = os.path.expanduser("~/.garminconnect")
         
         # Создаем клиента
         client = Garmin()
         
-        # Пробуем логин с токенами
-        try:
-            client.login(tokenstore)
-        except (FileNotFoundError, Exception):
-            # Если токены не работают - логинимся заново
-            client = Garmin("xgm.suite@gmail.com", "@Akhmedov4702468")
-            client.login()
-            # Сохраняем токены
-            client.garth.dump(tokenstore)
+        # Пробуем логин с токенами (с retry)
+        max_retries = 3
+        retry_delay = 10
+        
+        for attempt in range(max_retries):
+            try:
+                print(f"\n[Attempt {attempt + 1}/{max_retries}] Trying to login...")
+                client.login(tokenstore)
+                print("✓ Login successful with saved tokens!")
+                break
+            except FileNotFoundError:
+                print("✗ Token file not found, attempting fresh login...")
+                try:
+                    client = Garmin("xgm.suite@gmail.com", "@Akhmedov4702468")
+                    client.login()
+                    client.garth.dump(tokenstore)
+                    print("✓ Fresh login successful, tokens saved!")
+                    break
+                except Exception as e:
+                    if attempt < max_retries - 1:
+                        print(f"✗ Fresh login failed: {str(e)}")
+                        print(f"Retrying in {retry_delay} seconds...")
+                        time.sleep(retry_delay)
+                    else:
+                        raise Exception(f"Failed to login after {max_retries} attempts: {str(e)}")
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    print(f"✗ Login failed: {str(e)}")
+                    print(f"Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+                else:
+                    raise Exception(f"Failed to login after {max_retries} attempts: {str(e)}")
         
         # Получаем существующие данные
         existing_data = r.get("garmin_data")
         if existing_data:
             result = json.loads(existing_data)
             daily_data = result.get("daily_data", {})
+            print(f"\n✓ Loaded existing data from Redis ({len(daily_data)} days)")
         else:
             # Первый запуск - загружаем все данные с начала года
+            print("\n! First run detected, fetching all data from 2025-01-01...")
             daily_data = {}
             start_date = datetime(2025, 1, 1)
             current = start_date
             today = datetime.today()
+            total_days = (today - start_date).days + 1
+            
+            print(f"Total days to fetch: {total_days}")
             
             while current <= today:
                 date_str = current.strftime('%Y-%m-%d')
                 try:
+                    print(f"  Fetching {date_str}...", end=" ", flush=True)
                     stats = client.get_stats(date_str)
                     sleep_data = client.get_sleep_data(date_str)
                     
                     day_data = process_day_data(date_str, stats, sleep_data)
                     if day_data:
                         daily_data[date_str] = day_data
-                except:
-                    pass
+                        print("✓")
+                    else:
+                        print("- (no data)")
+                except Exception as e:
+                    print(f"✗ ({str(e)[:50]})")
                 current += timedelta(days=1)
         
         # Обновляем только сегодняшний день
         today_str = datetime.today().strftime('%Y-%m-%d')
+        print(f"\n→ Updating today's data ({today_str})...")
         try:
             stats = client.get_stats(today_str)
             sleep_data = client.get_sleep_data(today_str)
@@ -308,11 +350,16 @@ async def update_data():
                     if "water_ml" in daily_data[today_str]:
                         day_data["water_ml"] = daily_data[today_str]["water_ml"]
                 daily_data[today_str] = day_data
-        except:
-            pass
+                print("✓ Today's data updated successfully!")
+            else:
+                print("- No data for today yet")
+        except Exception as e:
+            print(f"✗ Failed to fetch today's data: {str(e)}")
         
         # Пересчитываем средние
+        print("\n→ Calculating averages...")
         averages = calculate_averages(daily_data)
+        print("✓ Averages calculated")
         
         result = {
             "period": {
@@ -325,7 +372,13 @@ async def update_data():
         }
         
         # Сохраняем в Redis
+        print("\n→ Saving to Redis...")
         r.set("garmin_data", json.dumps(result))
+        print("✓ Data saved successfully!")
+        
+        print("\n" + "=" * 50)
+        print(f"✓ Update completed! Total days: {len(daily_data)}")
+        print("=" * 50)
         
         return JSONResponse({
             "status": "success",
@@ -335,8 +388,10 @@ async def update_data():
     
     except Exception as e:
         error_trace = traceback.format_exc()
-        print(f"ERROR: {str(e)}")
-        print(f"TRACEBACK: {error_trace}")
+        print(f"\n✗✗✗ ERROR OCCURRED ✗✗✗")
+        print(f"Error: {str(e)}")
+        print(f"\nTraceback:\n{error_trace}")
+        print("=" * 50)
         return JSONResponse({
             "status": "error",
             "message": str(e),
