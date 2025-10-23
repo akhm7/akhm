@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ profile.name }} - Stats</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{ profile.name }}</h1>
+            <p class="role">{{ profile.role }}</p>
+            <p class="contact">{{ profile.telegram }}</p>
+            <p class="hobbies">{{ profile.hobbies }}</p>
+            <button id="theme-toggle" aria-label="Toggle theme">◐</button>
+        </header>
+
+        {% if data %}
+        <main>
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ "{:,}".format(data.averages.steps) }}</div>
+                    <div class="stat-label">avg steps/day</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ data.averages.distance_km }}</div>
+                    <div class="stat-label">avg km/day</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ data.averages.sleep_minutes // 60 }}h {{ data.averages.sleep_minutes % 60 }}m</div>
+                    <div class="stat-label">avg sleep</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ data.averages.total.days_with_data }}</div>
+                    <div class="stat-label">days tracked</div>
+                </div>
+            </section>
+
+            <section class="activity">
+                <h2>Activity Heatmap</h2>
+                <div id="heatmap"></div>
+            </section>
+
+            <section class="sleep-chart">
+                <h2>Sleep Pattern</h2>
+                <div id="sleep-bars"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Last update: {{ data.last_update[:10] if data.last_update else 'N/A' }}</p>
+        </footer>
+        {% else %}
+        <main>
+            <p class="no-data">{{ message or "Loading data..." }}</p>
+        </main>
+        {% endif %}
+    </div>
+
+    <script>
+        const data = {{ data | tojson | safe if data else 'null' }};
+    </script>
+    <script src="/static/app.js"></script>
+</body>
+</html>
